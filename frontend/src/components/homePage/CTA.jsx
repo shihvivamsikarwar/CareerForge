@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function CTA() {
   return (
     <section className="py-20 relative overflow-hidden">
@@ -36,18 +38,18 @@ export default function CTA() {
 
         {/* CTA Buttons */}
         <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
-          <a
-            href="#"
+          <Link
+            to="/register"
             className="px-8 py-4 bg-white text-brand-700 font-semibold rounded-xl hover:bg-brand-50 active:scale-95 transition-all shadow-xl shadow-black/20 text-base"
           >
             🚀 Get Started Free
-          </a>
-          <a
-            href="#"
+          </Link>
+          <Link
+            to="/register"
             className="px-8 py-4 bg-white/10 text-white font-semibold rounded-xl border border-white/30 hover:bg-white/20 active:scale-95 transition-all text-base backdrop-blur-sm"
           >
             📝 Create Resume
-          </a>
+          </Link>
         </div>
 
         {/* Trust items */}

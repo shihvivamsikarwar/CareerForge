@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 
 const ArrowRight = () => (
   <svg
@@ -135,12 +136,12 @@ export default function Hero() {
 
             {/* CTA Buttons */}
             <div className="animate-fade-up mt-8 flex flex-wrap gap-4">
-              <a href="#" className="btn-primary gap-2 text-base">
+              <Link to="/register" className="btn-primary gap-2 text-base">
                 Get Started Free <ArrowRight />
-              </a>
-              <a href="#" className="btn-secondary gap-2 text-base">
+              </Link>
+              <Link to="/login" className="btn-secondary gap-2 text-base">
                 <PlayIcon /> Try Demo
-              </a>
+              </Link>
             </div>
 
             {/* Social proof */}

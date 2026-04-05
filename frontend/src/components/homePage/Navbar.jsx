@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 const BoltIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -90,15 +91,15 @@ export default function Navbar() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
-            <a
-              href="#"
+            <Link
+              to="/login"
               className="text-sm font-semibold text-slate-600 hover:text-brand-600 px-4 py-2 rounded-lg hover:bg-brand-50 transition-all duration-200"
             >
               Login
-            </a>
-            <a href="#" className="btn-primary text-sm py-2.5 px-5">
+            </Link>
+            <Link to="/register" className="btn-primary text-sm py-2.5 px-5">
               Sign Up Free
-            </a>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -130,15 +131,20 @@ export default function Navbar() {
             </a>
           ))}
           <div className="pt-3 border-t border-slate-100 flex flex-col gap-2 mt-2">
-            <a
-              href="#"
+            <Link
+              to="/login"
               className="text-center py-2.5 text-slate-700 font-semibold hover:text-brand-600 transition-colors"
+              onClick={() => setMenuOpen(false)}
             >
               Login
-            </a>
-            <a href="#" className="btn-primary justify-center text-sm">
+            </Link>
+            <Link
+              to="/register"
+              className="btn-primary justify-center text-sm"
+              onClick={() => setMenuOpen(false)}
+            >
               Sign Up Free
-            </a>
+            </Link>
           </div>
         </div>
       </div>
