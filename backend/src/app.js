@@ -10,6 +10,7 @@ const passport = require("./config/passport");
 
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
+const resumeRoutes = require("./routes/resumeRoutes");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -133,9 +134,9 @@ app.get("/health", (req, res) => {
 // 8. API Routes
 // ─────────────────────────────────────────────────────────────────────────
 app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/resume", resumeRoutes);
 
 // Future route modules:
-// app.use('/api/resume',    protect, resumeRoutes);
 // app.use('/api/interview', protect, interviewRoutes);
 // app.use('/api/report',    protect, reportRoutes);
 

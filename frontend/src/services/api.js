@@ -25,7 +25,34 @@ async function request(path, options = {}) {
   return data;
 }
 
-// ─── Auth ───────────────────────────────────────────────────────────────────
+/**
+ * multipartRequest
+ * ─────────────────
+ * Like request() but does NOT set Content-Type — lets the browser set the
+ * multipart/form-data boundary automatically when sending FormData.
+ */
+async function multipartRequest(path, formData) {
+  const token = localStorage.getItem("cf_token");
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "POST",
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      // ⚠️  No Content-Type header — browser sets multipart boundary
+    },
+    body: formData,
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    throw new Error(data.message || `Request failed (${res.status})`);
+  }
+
+  return data;
+}
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
 
 export const authApi = {
   register: ({ name, email, password }) =>
@@ -46,7 +73,33 @@ export const authApi = {
   googleLoginUrl: () => `${BASE_URL}/auth/google`,
 };
 
-// ─── Token helpers ──────────────────────────────────────────────────────────
+// ─── Resume ──────────────────────────────────────────────────────────────────
+
+export const resumeApi = {
+  /**
+   * Upload a resume file for AI analysis.
+   * @param {File} file  - The PDF/DOC/DOCX file object from an <input type="file">
+   */
+  upload: (file) => {
+    const formData = new FormData();
+    formData.append("resume", file); // field name must match multer's upload.single('resume')
+    return multipartRequest("/resume/upload", formData);
+  },
+
+  /** Fetch all resumes for the current user (newest first, max 10) */
+  getMyResumes: () => request("/resume/my-resumes"),
+
+  /** Fetch the most recent completed resume */
+  getLatest: () => request("/resume/latest"),
+
+  /** Fetch a single resume by ID */
+  getById: (id) => request(`/resume/${id}`),
+
+  /** Delete a resume by ID */
+  delete: (id) => request(`/resume/${id}`, { method: "DELETE" }),
+};
+
+// ─── Token helpers ────────────────────────────────────────────────────────────
 
 export const tokenStorage = {
   get: () => localStorage.getItem("cf_token"),
