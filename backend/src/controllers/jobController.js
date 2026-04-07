@@ -1,6 +1,7 @@
 const Resume = require("../models/Resume");
 const Interview = require("../models/Interview");
 const { analyzeJobDescription, recommendJobs } = require("../services/jobAI");
+const { analyzeJobWithMarket, recommendJobsEnhanced, getJobMarketData } = require("../services/jobAIEnhanced");
 
 // POST /api/job/analyze - Analyze job description against user profile
 const analyzeJob = async (req, res) => {
@@ -89,8 +90,8 @@ const analyzeJob = async (req, res) => {
       performance: performanceData
     };
 
-    // Analyze with AI
-    const analysis = await analyzeJobDescription(jobDescription, userData);
+    // Analyze with Enhanced AI (includes market data)
+    const analysis = await analyzeJobWithMarket(jobDescription, userData);
 
     // Adjust for cheating if detected
     if (performanceData.hasCheating) {
@@ -182,8 +183,8 @@ const getRecommendations = async (req, res) => {
       performance: performanceData
     };
 
-    // Get recommendations from AI
-    const recommendations = await recommendJobs(userData);
+    // Get enhanced recommendations from AI (includes market data)
+    const recommendations = await recommendJobsEnhanced(userData);
 
     // Adjust for cheating if detected
     if (performanceData.hasCheating) {
@@ -206,7 +207,26 @@ const getRecommendations = async (req, res) => {
   }
 };
 
+// GET /api/job/market-data - Get current job market data
+const getMarketData = async (req, res) => {
+  try {
+    const marketData = await getJobMarketData();
+    
+    res.status(200).json({
+      success: true,
+      marketData,
+    });
+  } catch (error) {
+    console.error("getMarketData error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch market data.",
+    });
+  }
+};
+
 module.exports = {
   analyzeJob,
-  getRecommendations
+  getRecommendations,
+  getMarketData
 };

@@ -12,18 +12,18 @@ JOB DESCRIPTION:
 ${jobDescription}
 
 CANDIDATE PROFILE:
-Skills: ${userData.skills.join(', ')}
+Skills: ${userData.skills.join(", ")}
 Experience: ${userData.experience}
 Education: ${userData.education}
 Resume Score: ${userData.score}/100
-Strengths: ${userData.strengths.join(', ')}
-Weaknesses: ${userData.weaknesses.join(', ')}
+Strengths: ${userData.strengths.join(", ")}
+Weaknesses: ${userData.weaknesses.join(", ")}
 
 PERFORMANCE DATA:
 Average Interview Score: ${userData.performance.averageScore}/100
 Total Interviews: ${userData.performance.totalInterviews}
-Recent Scores: ${userData.performance.recentScores.join(', ')}
-Weak Areas: ${userData.performance.weakAreas.join(', ')}
+Recent Scores: ${userData.performance.recentScores.join(", ")}
+Weak Areas: ${userData.performance.weakAreas.join(", ")}
 
 Provide a comprehensive analysis in the following JSON format:
 {
@@ -52,7 +52,7 @@ Respond ONLY with valid JSON. No explanations or additional text.
     // Call AI service
     const aiResponse = await callAI(prompt);
     console.log("Job Analysis AI Response:", aiResponse);
-    
+
     // Parse and validate the response
     let analysis;
     try {
@@ -65,7 +65,6 @@ Respond ONLY with valid JSON. No explanations or additional text.
 
     // Validate and sanitize the analysis
     return validateAnalysis(analysis);
-    
   } catch (error) {
     console.error("Job analysis error:", error);
     return getFallbackAnalysis();
@@ -81,18 +80,18 @@ async function recommendJobs(userData) {
 As an expert career counselor, analyze the candidate's profile and recommend the best job roles for them.
 
 CANDIDATE PROFILE:
-Skills: ${userData.skills.join(', ')}
+Skills: ${userData.skills.join(", ")}
 Experience: ${userData.experience}
 Education: ${userData.education}
 Resume Score: ${userData.score}/100
-Strengths: ${userData.strengths.join(', ')}
-Weaknesses: ${userData.weaknesses.join(', ')}
+Strengths: ${userData.strengths.join(", ")}
+Weaknesses: ${userData.weaknesses.join(", ")}
 
 PERFORMANCE DATA:
 Average Interview Score: ${userData.performance.averageScore}/100
 Total Interviews: ${userData.performance.totalInterviews}
-Recent Scores: ${userData.performance.recentScores.join(', ')}
-Weak Areas: ${userData.performance.weakAreas.join(', ')}
+Recent Scores: ${userData.performance.recentScores.join(", ")}
+Weak Areas: ${userData.performance.weakAreas.join(", ")}
 
 Provide job recommendations in the following JSON format:
 {
@@ -128,7 +127,7 @@ Respond ONLY with valid JSON. No explanations or additional text.
     // Call AI service
     const aiResponse = await callAI(prompt);
     console.log("Job Recommendations AI Response:", aiResponse);
-    
+
     // Parse and validate the response
     let recommendations;
     try {
@@ -141,7 +140,6 @@ Respond ONLY with valid JSON. No explanations or additional text.
 
     // Validate and sanitize the recommendations
     return validateRecommendations(recommendations);
-    
   } catch (error) {
     console.error("Job recommendations error:", error);
     return getFallbackRecommendations();
@@ -153,13 +151,28 @@ Respond ONLY with valid JSON. No explanations or additional text.
  */
 function validateAnalysis(analysis) {
   const defaultAnalysis = getFallbackAnalysis();
-  
+
   return {
-    matchScore: Math.min(100, Math.max(0, parseInt(analysis.matchScore) || defaultAnalysis.matchScore)),
-    matchedSkills: Array.isArray(analysis.matchedSkills) ? analysis.matchedSkills.slice(0, 10) : defaultAnalysis.matchedSkills,
-    missingSkills: Array.isArray(analysis.missingSkills) ? analysis.missingSkills.slice(0, 10) : defaultAnalysis.missingSkills,
-    suggestions: Array.isArray(analysis.suggestions) ? analysis.suggestions.slice(0, 8) : defaultAnalysis.suggestions,
-    readinessScore: Math.min(100, Math.max(0, parseInt(analysis.readinessScore) || defaultAnalysis.readinessScore)),
+    matchScore: Math.min(
+      100,
+      Math.max(0, parseInt(analysis.matchScore) || defaultAnalysis.matchScore)
+    ),
+    matchedSkills: Array.isArray(analysis.matchedSkills)
+      ? analysis.matchedSkills.slice(0, 10)
+      : defaultAnalysis.matchedSkills,
+    missingSkills: Array.isArray(analysis.missingSkills)
+      ? analysis.missingSkills.slice(0, 10)
+      : defaultAnalysis.missingSkills,
+    suggestions: Array.isArray(analysis.suggestions)
+      ? analysis.suggestions.slice(0, 8)
+      : defaultAnalysis.suggestions,
+    readinessScore: Math.min(
+      100,
+      Math.max(
+        0,
+        parseInt(analysis.readinessScore) || defaultAnalysis.readinessScore
+      )
+    ),
   };
 }
 
@@ -168,13 +181,26 @@ function validateAnalysis(analysis) {
  */
 function validateRecommendations(recommendations) {
   const defaultRecommendations = getFallbackRecommendations();
-  
+
   return {
-    bestRoles: Array.isArray(recommendations.bestRoles) ? recommendations.bestRoles.slice(0, 5) : defaultRecommendations.bestRoles,
-    confidenceLevel: ["High", "Medium", "Low"].includes(recommendations.confidenceLevel) ? recommendations.confidenceLevel : defaultRecommendations.confidenceLevel,
-    reason: typeof recommendations.reason === 'string' ? recommendations.reason.substring(0, 200) : defaultRecommendations.reason,
-    learningPath: Array.isArray(recommendations.learningPath) ? recommendations.learningPath.slice(0, 6) : defaultRecommendations.learningPath,
-    weakAreas: Array.isArray(recommendations.weakAreas) ? recommendations.weakAreas.slice(0, 6) : defaultRecommendations.weakAreas,
+    bestRoles: Array.isArray(recommendations.bestRoles)
+      ? recommendations.bestRoles.slice(0, 5)
+      : defaultRecommendations.bestRoles,
+    confidenceLevel: ["High", "Medium", "Low"].includes(
+      recommendations.confidenceLevel
+    )
+      ? recommendations.confidenceLevel
+      : defaultRecommendations.confidenceLevel,
+    reason:
+      typeof recommendations.reason === "string"
+        ? recommendations.reason.substring(0, 200)
+        : defaultRecommendations.reason,
+    learningPath: Array.isArray(recommendations.learningPath)
+      ? recommendations.learningPath.slice(0, 6)
+      : defaultRecommendations.learningPath,
+    weakAreas: Array.isArray(recommendations.weakAreas)
+      ? recommendations.weakAreas.slice(0, 6)
+      : defaultRecommendations.weakAreas,
   };
 }
 
@@ -189,7 +215,7 @@ function getFallbackAnalysis() {
     suggestions: [
       "Gain cloud certification (AWS/Azure)",
       "Study system design patterns",
-      "Practice advanced algorithms"
+      "Practice advanced algorithms",
     ],
     readinessScore: 60,
   };
@@ -200,27 +226,23 @@ function getFallbackAnalysis() {
  */
 function getFallbackRecommendations() {
   return {
-    bestRoles: [
-      "Software Developer",
-      "Junior Developer", 
-      "Technical Support"
-    ],
+    bestRoles: ["Software Developer", "Junior Developer", "Technical Support"],
     confidenceLevel: "Medium",
     reason: "Based on current skills and experience level",
     learningPath: [
       "Advanced programming concepts",
       "System architecture",
-      "Professional development"
+      "Professional development",
     ],
     weakAreas: [
       "Advanced technical skills",
       "Leadership experience",
-      "Industry certifications"
+      "Industry certifications",
     ],
   };
 }
 
 module.exports = {
   analyzeJobDescription,
-  recommendJobs
+  recommendJobs,
 };
