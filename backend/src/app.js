@@ -14,12 +14,14 @@ const connectDB = require("./config/db");
 require("./models/User");
 require("./models/Resume");
 require("./models/Interview");
+require("./models/JobAnalysis");
 
 const authRoutes = require("./routes/authRoutes");
 const resumeRoutes = require("./routes/resumeRoutes");
 const interviewRoutes = require("./routes/interviewRoutes");
 const performanceRoutes = require("./routes/performanceRoutes");
 const jobAnalyzerRoutes = require("./routes/jobAnalyzerRoutes");
+const jobRoutes = require("./routes/jobRoutes");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -147,6 +149,7 @@ app.use("/api/resume", resumeRoutes);
 app.use("/api/interview", interviewRoutes);
 app.use("/api/performance", performanceRoutes);
 app.use("/api/job-analyzer", jobAnalyzerRoutes);
+app.use("/api/job", jobRoutes);
 
 // Future route modules:
 // app.use('/api/report', reportRoutes);

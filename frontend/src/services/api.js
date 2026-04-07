@@ -165,6 +165,25 @@ export const jobAnalyzerApi = {
       method: "POST",
       body: JSON.stringify({ jobDescription }),
     }),
+
+  /** Get user's job analysis history */
+  getHistory: () => request("/job-analyzer/history"),
+
+  /** Get specific job analysis by ID */
+  getById: (id) => request(`/job-analyzer/${id}`),
+};
+
+// Job Recommendation API
+export const jobApi = {
+  /** Analyze job description against user profile */
+  analyze: (jobDescription) =>
+    request("/job/analyze", {
+      method: "POST",
+      body: JSON.stringify({ jobDescription }),
+    }),
+
+  /** Get job recommendations based on user profile */
+  getRecommendations: () => request("/job/recommendations"),
 };
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
