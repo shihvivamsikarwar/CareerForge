@@ -9,9 +9,17 @@ const MongoStore = require("connect-mongo");
 const passport = require("./config/passport");
 
 const connectDB = require("./config/db");
+
+// Import models to ensure they're registered with MongoDB
+require("./models/User");
+require("./models/Resume");
+require("./models/Interview");
+
 const authRoutes = require("./routes/authRoutes");
 const resumeRoutes = require("./routes/resumeRoutes");
 const interviewRoutes = require("./routes/interviewRoutes");
+const performanceRoutes = require("./routes/performanceRoutes");
+const jobAnalyzerRoutes = require("./routes/jobAnalyzerRoutes");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -137,6 +145,8 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/interview", interviewRoutes);
+app.use("/api/performance", performanceRoutes);
+app.use("/api/job-analyzer", jobAnalyzerRoutes);
 
 // Future route modules:
 // app.use('/api/report', reportRoutes);

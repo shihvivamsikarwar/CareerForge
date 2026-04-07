@@ -192,7 +192,39 @@ const getInterviewHistory = async (req, res) => {
 // Remaining standard routes
 // ─────────────────────────────────────────────────────────────────────────
 const getInterviewById = async (req, res) => {
-  /* logic here */
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Interview ID is required." 
+      });
+    }
+
+    const interview = await Interview.findOne({ 
+      _id: id, 
+      userId: req.user._id 
+    });
+
+    if (!interview) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Interview not found." 
+      });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      interview: interview.toPublicJSON() 
+    });
+  } catch (error) {
+    console.error("getInterviewById error:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error fetching interview." 
+    });
+  }
 };
 const deleteInterview = async (req, res) => {
   /* logic here */

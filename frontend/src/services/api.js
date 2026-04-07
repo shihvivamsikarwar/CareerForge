@@ -149,6 +149,24 @@ export const interviewApi = {
   delete: (id) => request(`/interview/${id}`, { method: "DELETE" }),
 };
 
+// ─── Performance ─────────────────────────────────────────────────────────────
+
+export const performanceApi = {
+  /** Get performance summary with trends, insights, and history */
+  getSummary: () => request("/performance/summary"),
+};
+
+// ─── Job Analyzer ───────────────────────────────────────────────────────────
+
+export const jobAnalyzerApi = {
+  /** Analyze job description against user's resume */
+  analyze: (jobDescription) =>
+    request("/job-analyzer/analyze", {
+      method: "POST",
+      body: JSON.stringify({ jobDescription }),
+    }),
+};
+
 // ─── Token helpers ────────────────────────────────────────────────────────────
 
 export const tokenStorage = {
