@@ -15,6 +15,7 @@ require("./models/User");
 require("./models/Resume");
 require("./models/Interview");
 require("./models/JobAnalysis");
+require("./models/UserSettings");
 
 const authRoutes = require("./routes/authRoutes");
 const resumeRoutes = require("./routes/resumeRoutes");
@@ -22,6 +23,7 @@ const interviewRoutes = require("./routes/interviewRoutes");
 const performanceRoutes = require("./routes/performanceRoutes");
 const jobAnalyzerRoutes = require("./routes/jobAnalyzerRoutes");
 const jobRoutes = require("./routes/jobRoutes");
+const settingsRoutes = require("./routes/settingsRoutes");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -150,6 +152,7 @@ app.use("/api/interview", interviewRoutes);
 app.use("/api/performance", performanceRoutes);
 app.use("/api/job-analyzer", jobAnalyzerRoutes);
 app.use("/api/job", jobRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // Future route modules:
 // app.use('/api/report', reportRoutes);

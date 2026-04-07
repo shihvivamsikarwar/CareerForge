@@ -16,6 +16,7 @@ import Performance from "./pages/Performance";
 import JobAnalyzer from "./pages/JobAnalyzer";
 import JobAnalysisHistory from "./pages/JobAnalysisHistory";
 import JobRecommendation from "./pages/JobRecommendation";
+import Settings from "./pages/Settings";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main component
@@ -119,6 +120,14 @@ export default function App() {
             element={
               <Protected>
                 <JobRecommendation />
+              </Protected>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <Protected>
+                <Settings />
               </Protected>
             }
           />

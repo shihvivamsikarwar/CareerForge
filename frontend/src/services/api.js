@@ -175,7 +175,7 @@ export const jobAnalyzerApi = {
 
 // Job Recommendation API
 export const jobApi = {
-  /** Analyze job description against user profile */
+  /** Analyze job description */
   analyze: (jobDescription) =>
     request("/job/analyze", {
       method: "POST",
@@ -187,6 +187,52 @@ export const jobApi = {
 
   /** Get current job market data */
   getMarketData: () => request("/job/market-data"),
+};
+
+// Settings API
+export const settingsApi = {
+  /** Get all user settings */
+  getSettings: () => request("/settings"),
+
+  /** Update user settings */
+  updateSettings: (settings) =>
+    request("/settings", {
+      method: "PUT",
+      body: JSON.stringify(settings),
+    }),
+
+  /** Update profile information */
+  updateProfile: (profile) =>
+    request("/settings/profile", {
+      method: "PUT",
+      body: JSON.stringify(profile),
+    }),
+
+  /** Change password */
+  changePassword: (passwordData) =>
+    request("/settings/password", {
+      method: "PUT",
+      body: JSON.stringify(passwordData),
+    }),
+
+  /** Logout from all devices */
+  logoutAllDevices: () =>
+    request("/settings/logout-all", {
+      method: "POST",
+    }),
+
+  /** Delete user account */
+  deleteAccount: (confirmation) =>
+    request("/settings/account", {
+      method: "DELETE",
+      body: JSON.stringify(confirmation),
+    }),
+
+  /** Reset settings to defaults */
+  resetSettings: () =>
+    request("/settings/reset", {
+      method: "POST",
+    }),
 };
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
