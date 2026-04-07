@@ -268,4 +268,92 @@ const getMockAnalysis = (text) => {
   };
 };
 
-module.exports = { analyzeResume };
+/**
+ * analyzeJobDescription
+ * ───────────────────
+ * Sends job description and resume text to OpenRouter for match analysis.
+ * Returns structured analysis with match scores and recommendations.
+ *
+ * @param {string} prompt - The complete analysis prompt
+ * @returns {Promise<string>} - AI response as text
+ */
+const analyzeJobDescription = async (prompt) => {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  const model = process.env.OPENROUTER_MODEL || "mistralai/mistral-7b-instruct";
+
+  if (!apiKey) {
+    console.warn("⚠️  OPENROUTER_API_KEY not set — returning mock job analysis");
+    return JSON.stringify(getMockJobAnalysis());
+  }
+
+  try {
+    const response = await fetch(OPENROUTER_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://careerforge.app",
+        "X-Title": "CareerForge Job Analyzer",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: "You are an expert career counselor and technical recruiter. Always respond with valid JSON only." },
+          { role: "user", content: prompt },
+        ],
+        temperature: 0.3,
+        max_tokens: 1500,
+        response_format: { type: "json_object" },
+      }),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      throw new Error(`OpenRouter API error ${response.status}: ${errBody}`);
+    }
+
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content;
+
+    if (!content) {
+      throw new Error("Empty response from OpenRouter");
+    }
+
+    return content;
+  } catch (error) {
+    console.error("analyzeJobDescription AI error:", error.message);
+    return JSON.stringify(getMockJobAnalysis());
+  }
+};
+
+/**
+ * getMockJobAnalysis
+ * ───────────────────
+ * Returns mock job analysis when AI service is unavailable.
+ */
+const getMockJobAnalysis = () => ({
+  matchScore: 75,
+  breakdown: {
+    technicalSkills: 80,
+    experience: 70,
+    keywords: 75,
+  },
+  missingSkills: [
+    "Docker & Kubernetes",
+    "System Design",
+    "GraphQL"
+  ],
+  matchedSkills: [
+    "React",
+    "TypeScript",
+    "REST APIs",
+    "Node.js"
+  ],
+  actionPlan: [
+    "Complete a Docker fundamentals course (2 weeks)",
+    "Practice 3 system design problems per week",
+    "Add GraphQL to your side project for hands-on XP"
+  ],
+});
+
+module.exports = { analyzeResume, analyzeJobDescription };

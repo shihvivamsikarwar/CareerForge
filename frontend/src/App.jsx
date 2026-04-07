@@ -12,6 +12,11 @@ import Interview from "./pages/Interview";
 import InterviewSession from "./pages/InterviewSession";
 import InterviewResult from "./pages/InterviewResult";
 import InterviewHistory from "./pages/InterviewHistory";
+import Performance from "./pages/Performance";
+import JobAnalyzer from "./pages/JobAnalyzer";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main component
 
 const Protected = ({ children }) => <ProtectedRoute>{children}</ProtectedRoute>;
 
@@ -80,6 +85,22 @@ export default function App() {
             element={
               <Protected>
                 <InterviewHistory />
+              </Protected>
+            }
+          />
+          <Route
+            path="/performance"
+            element={
+              <Protected>
+                <Performance />
+              </Protected>
+            }
+          />
+          <Route
+            path="/job-analyzer"
+            element={
+              <Protected>
+                <JobAnalyzer />
               </Protected>
             }
           />
