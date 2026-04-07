@@ -14,6 +14,8 @@ import InterviewResult from "./pages/InterviewResult";
 import InterviewHistory from "./pages/InterviewHistory";
 import Performance from "./pages/Performance";
 import JobAnalyzer from "./pages/JobAnalyzer";
+import JobAnalysisHistory from "./pages/JobAnalysisHistory";
+import JobRecommendation from "./pages/JobRecommendation";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Main component
@@ -101,6 +103,22 @@ export default function App() {
             element={
               <Protected>
                 <JobAnalyzer />
+              </Protected>
+            }
+          />
+          <Route
+            path="/job-analyzer/history"
+            element={
+              <Protected>
+                <JobAnalysisHistory />
+              </Protected>
+            }
+          />
+          <Route
+            path="/job-recommendation"
+            element={
+              <Protected>
+                <JobRecommendation />
               </Protected>
             }
           />

@@ -63,19 +63,24 @@ Respond ONLY with valid JSON. No explanations or additional text.
 
     // Call AI service
     const aiResponse = await analyzeJobDescription(prompt);
+    console.log("AI Response:", aiResponse);
     
     // Parse and validate the response
     let analysis;
     try {
       analysis = JSON.parse(aiResponse);
+      console.log("Parsed AI analysis:", analysis);
     } catch (parseError) {
       console.error("Failed to parse AI response:", parseError);
+      console.log("Using fallback analysis due to parse error");
       // Return fallback analysis
       analysis = getFallbackAnalysis();
     }
 
     // Validate and sanitize the analysis
-    return validateAnalysis(analysis);
+    const validatedAnalysis = validateAnalysis(analysis);
+    console.log("Final validated analysis:", validatedAnalysis);
+    return validatedAnalysis;
     
   } catch (error) {
     console.error("Job analysis error:", error);
