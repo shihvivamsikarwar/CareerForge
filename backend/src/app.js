@@ -11,6 +11,7 @@ const passport = require("./config/passport");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const resumeRoutes = require("./routes/resumeRoutes");
+const interviewRoutes = require("./routes/interviewRoutes");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -135,10 +136,10 @@ app.get("/health", (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/resume", resumeRoutes);
+app.use("/api/interview", interviewRoutes);
 
 // Future route modules:
-// app.use('/api/interview', protect, interviewRoutes);
-// app.use('/api/report',    protect, reportRoutes);
+// app.use('/api/report', reportRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────
 // 9. Error handling (must be after all routes)

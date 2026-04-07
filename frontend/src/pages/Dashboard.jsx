@@ -161,10 +161,10 @@ export default function Dashboard() {
                 href: "/interviews",
               },
               {
-                icon: "🔍",
-                label: "Run Job Analyzer",
+                icon: "📋",
+                label: "Interview History",
                 color: "bg-emerald-600 text-white hover:bg-emerald-700",
-                href: "/job-analyzer",
+                href: "/interviews/history",
               },
               {
                 icon: "📊",

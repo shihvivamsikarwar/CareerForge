@@ -99,6 +99,56 @@ export const resumeApi = {
   delete: (id) => request(`/resume/${id}`, { method: "DELETE" }),
 };
 
+// ─── Interview ───────────────────────────────────────────────────────────────
+
+export const interviewApi = {
+  /** Fetch all available interview type metadata */
+  getTypes: () => request("/interview/types"),
+
+  /**
+   * Start a new interview session.
+   * @param {string} type  - Interview type id (e.g. 'react', 'hr')
+   */
+  start: (type) =>
+    request("/interview/start", {
+      method: "POST",
+      body: JSON.stringify({ type }),
+    }),
+
+  /**
+   * Submit answers for AI evaluation.
+   * @param {string}   interviewId     - ID from startInterview response
+   * @param {string[]} answers         - Answers in same order as questions
+   * @param {number}   durationSeconds - Optional session duration
+   * @param {object}   integrityReport - Anti-cheating data collected during session
+   */
+  submit: (
+    interviewId,
+    answers,
+    durationSeconds = null,
+    integrityReport = null
+  ) =>
+    request("/interview/submit", {
+      method: "POST",
+      body: JSON.stringify({
+        interviewId,
+        answers,
+        durationSeconds,
+        integrityReport,
+      }),
+    }),
+
+  /** Paginated interview history */
+  getHistory: (page = 1, limit = 10) =>
+    request(`/interview/history?page=${page}&limit=${limit}`),
+
+  /** Single interview result by ID */
+  getById: (id) => request(`/interview/${id}`),
+
+  /** Delete an interview record */
+  delete: (id) => request(`/interview/${id}`, { method: "DELETE" }),
+};
+
 // ─── Token helpers ────────────────────────────────────────────────────────────
 
 export const tokenStorage = {
