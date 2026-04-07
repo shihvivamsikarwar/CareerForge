@@ -184,6 +184,9 @@ export const jobApi = {
 
   /** Get job recommendations based on user profile */
   getRecommendations: () => request("/job/recommendations"),
+
+  /** Get current job market data */
+  getMarketData: () => request("/job/market-data"),
 };
 
 // ─── Token helpers ────────────────────────────────────────────────────────────
