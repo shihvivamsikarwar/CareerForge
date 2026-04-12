@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const { analyzeResumeEnhanced, fetchWithRetry, parseAIResponse, validateAndCoerce } = require("./aiServiceEnhanced");
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -18,118 +19,13 @@ const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
  * @returns {Promise<object>}  - Structured analysis result
  */
 const analyzeResume = async (resumeText) => {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || "mistralai/mistral-7b-instruct";
-
-  if (!apiKey) {
-    console.warn("⚠️  OPENROUTER_API_KEY not set — returning mock analysis");
-    return getMockAnalysis(resumeText);
-  }
-
-  // Truncate to ~4000 words to stay well within context limits
-  const truncatedText = truncateText(resumeText, 4000);
-
-  const systemPrompt = `You are an expert resume analyst and career coach with 15+ years of experience.
-Your job is to analyze resumes and return ONLY a valid JSON object — no markdown, no explanation, no preamble.
-The JSON must exactly match this schema:
-{
-  "skills": ["skill1", "skill2"],
-  "summary": "2-3 sentence professional summary of the candidate",
-  "strengths": ["strength1", "strength2", "strength3"],
-  "weaknesses": ["weakness1", "weakness2"],
-  "suggestions": ["actionable suggestion1", "actionable suggestion2", "actionable suggestion3"]
-}
-Rules:
-- skills: List ALL technical and soft skills found (max 20)
-- summary: Concise, professional, third-person overview
-- strengths: 3-5 specific strong points backed by evidence in the resume
-- weaknesses: 2-3 honest gaps or areas that could be improved
-- suggestions: 3-5 specific, actionable improvements (not generic advice)
-- Return ONLY the JSON object. No other text.`;
-
-  const userPrompt = `Analyze this resume and return structured JSON:\n\n${truncatedText}`;
-
-  try {
-    const response = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://careerforge.app",
-        "X-Title": "CareerForge Resume Analyzer",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.3, // Low temperature → consistent, structured output
-        max_tokens: 1500,
-        response_format: { type: "json_object" }, // Supported by most OpenRouter models
-      }),
-    });
-
-    if (!response.ok) {
-      const errBody = await response.text();
-      throw new Error(`OpenRouter API error ${response.status}: ${errBody}`);
-    }
-
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content;
-
-    if (!content) {
-      throw new Error("Empty response from OpenRouter");
-    }
-
-    return parseAIResponse(content);
-  } catch (error) {
-    console.error("analyzeResume AI error:", error.message);
-
-    // Return a graceful fallback — the upload still succeeds, we just note
-    // the AI couldn't fully analyse it
-    return getFallbackAnalysis(resumeText);
-  }
+  // Use the enhanced AI service with better error handling and retries
+  return await analyzeResumeEnhanced(resumeText);
 };
 
 // ─────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────
-
-/**
- * parseAIResponse
- * ────────────────
- * Safely extracts and validates the JSON from the AI message content.
- * Handles models that wrap JSON in markdown code fences.
- */
-const parseAIResponse = (content) => {
-  try {
-    // Strip markdown code fences if present (some models ignore response_format)
-    const cleaned = content
-      .replace(/^```json\s*/i, "")
-      .replace(/^```\s*/, "")
-      .replace(/```\s*$/, "")
-      .trim();
-
-    const parsed = JSON.parse(cleaned);
-
-    return {
-      skills: toStringArray(parsed.skills, 20),
-      summary: toString(parsed.summary),
-      strengths: toStringArray(parsed.strengths, 10),
-      weaknesses: toStringArray(parsed.weaknesses, 10),
-      suggestions: toStringArray(parsed.suggestions, 10),
-    };
-  } catch (err) {
-    console.error(
-      "Failed to parse AI JSON response:",
-      err.message,
-      "\nRaw:",
-      content?.slice(0, 200)
-    );
-    return getFallbackAnalysis("");
-  }
-};
 
 /** Coerce a value to a clean string, or return empty string */
 const toString = (val) => (typeof val === "string" ? val.trim() : "");
