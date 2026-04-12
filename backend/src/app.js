@@ -1,4 +1,4 @@
-require("dotenv").config(); // Must be first — loads .env before anything else
+require("dotenv").config({ path: require("path").resolve(__dirname, "../.env") }); // Must be first — loads .env before anything else
 
 const express = require("express");
 const cors = require("cors");
@@ -9,21 +9,12 @@ const MongoStore = require("connect-mongo");
 const passport = require("./config/passport");
 
 const connectDB = require("./config/db");
-
-// Import models to ensure they're registered with MongoDB
-require("./models/User");
-require("./models/Resume");
-require("./models/Interview");
-require("./models/JobAnalysis");
-require("./models/UserSettings");
-
 const authRoutes = require("./routes/authRoutes");
 const resumeRoutes = require("./routes/resumeRoutes");
 const interviewRoutes = require("./routes/interviewRoutes");
 const performanceRoutes = require("./routes/performanceRoutes");
 const jobAnalyzerRoutes = require("./routes/jobAnalyzerRoutes");
-const jobRoutes = require("./routes/jobRoutes");
-const settingsRoutes = require("./routes/settingsRoutes");
+const careerRoutes = require("./routes/careerRoutes");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -150,12 +141,8 @@ app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/interview", interviewRoutes);
 app.use("/api/performance", performanceRoutes);
-app.use("/api/job-analyzer", jobAnalyzerRoutes);
-app.use("/api/job", jobRoutes);
-app.use("/api/settings", settingsRoutes);
-
-// Future route modules:
-// app.use('/api/report', reportRoutes);
+app.use("/api/job", jobAnalyzerRoutes);
+app.use("/api/career", careerRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────
 // 9. Error handling (must be after all routes)
