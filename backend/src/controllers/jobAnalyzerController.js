@@ -32,11 +32,14 @@ const analyzeJobDescription = async (req, res) => {
     console.log("Starting job analysis for user:", req.user._id);
     console.log("Resume found:", resume.originalFileName);
     console.log("Resume has extracted text:", !!resume.extractedText);
-    
+
     const analysis = await analyzeJobMatch(jobDescription, resume);
 
     console.log(`Job analysis complete for user: ${req.user._id}`);
-    console.log("Final analysis being sent to frontend:", JSON.stringify(analysis, null, 2));
+    console.log(
+      "Final analysis being sent to frontend:",
+      JSON.stringify(analysis, null, 2)
+    );
 
     // Save analysis to database
     const jobAnalysis = await JobAnalysis.create({
@@ -69,13 +72,13 @@ const analyzeJobDescription = async (req, res) => {
 const getJobAnalysisHistory = async (req, res) => {
   try {
     const analyses = await JobAnalysis.find({ userId: req.user._id })
-      .populate('resumeId', 'originalFileName createdAt')
+      .populate("resumeId", "originalFileName createdAt")
       .sort({ createdAt: -1 })
       .limit(20);
 
     res.status(200).json({
       success: true,
-      analyses: analyses.map(analysis => analysis.toPublicJSON()),
+      analyses: analyses.map((analysis) => analysis.toPublicJSON()),
     });
   } catch (error) {
     console.error("getJobAnalysisHistory error:", error);
@@ -91,10 +94,10 @@ const getJobAnalysisById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const analysis = await JobAnalysis.findOne({ 
-      _id: id, 
-      userId: req.user._id 
-    }).populate('resumeId', 'originalFileName createdAt');
+    const analysis = await JobAnalysis.findOne({
+      _id: id,
+      userId: req.user._id,
+    }).populate("resumeId", "originalFileName createdAt");
 
     if (!analysis) {
       return res.status(404).json({
@@ -116,8 +119,8 @@ const getJobAnalysisById = async (req, res) => {
   }
 };
 
-module.exports = { 
-  analyzeJobDescription, 
-  getJobAnalysisHistory, 
-  getJobAnalysisById 
+module.exports = {
+  analyzeJobDescription,
+  getJobAnalysisHistory,
+  getJobAnalysisById,
 };

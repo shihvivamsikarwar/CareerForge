@@ -172,6 +172,12 @@ export default function Dashboard() {
                 color: "bg-slate-100 text-slate-700 hover:bg-slate-200",
                 href: "/performance",
               },
+              {
+                icon: "🚀",
+                label: "Career Guidance",
+                color: "bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-700 hover:to-indigo-700",
+                href: "/career",
+              },
             ].map((action) => (
               <Link
                 key={action.label}

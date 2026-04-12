@@ -1,8 +1,10 @@
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+"use strict";
+
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5002/api";
 
 /**
- * Core fetch wrapper — throws a plain Error with the server's message
- * so callers can just catch and display err.message.
+ * Core fetch wrapper
+ * Logs backend details for easier debugging of 500 errors.
  */
 async function request(path, options = {}) {
   const token = localStorage.getItem("cf_token");
@@ -19,6 +21,8 @@ async function request(path, options = {}) {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
+    // This will print the exact reason the backend crashed in your F12 console
+    console.error(`🔥 Backend Error (${res.status}) at ${path}:`, data);
     throw new Error(data.message || `Request failed (${res.status})`);
   }
 
@@ -27,9 +31,7 @@ async function request(path, options = {}) {
 
 /**
  * multipartRequest
- * ─────────────────
- * Like request() but does NOT set Content-Type — lets the browser set the
- * multipart/form-data boundary automatically when sending FormData.
+ * Handles binary file uploads for Resumes.
  */
 async function multipartRequest(path, formData) {
   const token = localStorage.getItem("cf_token");
@@ -38,7 +40,6 @@ async function multipartRequest(path, formData) {
     method: "POST",
     headers: {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      // ⚠️  No Content-Type header — browser sets multipart boundary
     },
     body: formData,
   });
@@ -46,6 +47,7 @@ async function multipartRequest(path, formData) {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
+    console.error(`🔥 Multipart Error (${res.status}) at ${path}:`, data);
     throw new Error(data.message || `Request failed (${res.status})`);
   }
 
@@ -53,75 +55,49 @@ async function multipartRequest(path, formData) {
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
-
 export const authApi = {
-  register: ({ name, email, password }) =>
+  register: (payload) =>
     request("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify(payload),
     }),
-
-  login: ({ email, password }) =>
-    request("/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    }),
-
+  login: (payload) =>
+    request("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
   getMe: () => request("/auth/me"),
-
-  /** Full URL so the browser can do a hard redirect (OAuth flow). */
   googleLoginUrl: () => `${BASE_URL}/auth/google`,
 };
 
 // ─── Resume ──────────────────────────────────────────────────────────────────
-
 export const resumeApi = {
-  /**
-   * Upload a resume file for AI analysis.
-   * @param {File} file  - The PDF/DOC/DOCX file object from an <input type="file">
-   */
   upload: (file) => {
     const formData = new FormData();
-    formData.append("resume", file); // field name must match multer's upload.single('resume')
+    formData.append("resume", file);
     return multipartRequest("/resume/upload", formData);
   },
-
-  /** Fetch all resumes for the current user (newest first, max 10) */
   getMyResumes: () => request("/resume/my-resumes"),
-
-  /** Fetch the most recent completed resume */
   getLatest: () => request("/resume/latest"),
-
-  /** Fetch a single resume by ID */
   getById: (id) => request(`/resume/${id}`),
-
-  /** Delete a resume by ID */
   delete: (id) => request(`/resume/${id}`, { method: "DELETE" }),
 };
 
+// ─── Career Guidance + Recommendations ───────────────────────────────────────
+export const careerApi = {
+  getGuidance: () => request("/career/guidance"),
+  getRecommendations: (refresh = false) =>
+    request(`/career/recommendations${refresh ? "?refresh=true" : ""}`),
+  getSavedRoles: () => request("/career/recommendations/saved"),
+  toggleSave: (roleId) =>
+    request(`/career/recommendations/save/${roleId}`, { method: "PATCH" }),
+};
+
 // ─── Interview ───────────────────────────────────────────────────────────────
-
 export const interviewApi = {
-  /** Fetch all available interview type metadata */
   getTypes: () => request("/interview/types"),
-
-  /**
-   * Start a new interview session.
-   * @param {string} type  - Interview type id (e.g. 'react', 'hr')
-   */
-  start: (type) =>
+  start: (type, questionCount = null) =>
     request("/interview/start", {
       method: "POST",
-      body: JSON.stringify({ type }),
+      body: JSON.stringify({ type, ...(questionCount && { questionCount }) }),
     }),
-
-  /**
-   * Submit answers for AI evaluation.
-   * @param {string}   interviewId     - ID from startInterview response
-   * @param {string[]} answers         - Answers in same order as questions
-   * @param {number}   durationSeconds - Optional session duration
-   * @param {object}   integrityReport - Anti-cheating data collected during session
-   */
   submit: (
     interviewId,
     answers,
@@ -137,105 +113,51 @@ export const interviewApi = {
         integrityReport,
       }),
     }),
-
-  /** Paginated interview history */
   getHistory: (page = 1, limit = 10) =>
     request(`/interview/history?page=${page}&limit=${limit}`),
-
-  /** Single interview result by ID */
   getById: (id) => request(`/interview/${id}`),
-
-  /** Delete an interview record */
   delete: (id) => request(`/interview/${id}`, { method: "DELETE" }),
 };
 
-// ─── Performance ─────────────────────────────────────────────────────────────
-
+// ─── Performance & Jobs ──────────────────────────────────────────────────────
 export const performanceApi = {
-  /** Get performance summary with trends, insights, and history */
   getSummary: () => request("/performance/summary"),
+  getTypeBreakdown: () => request("/performance/type-breakdown"),
 };
 
-// ─── Job Analyzer ───────────────────────────────────────────────────────────
-
-export const jobAnalyzerApi = {
-  /** Analyze job description against user's resume */
-  analyze: (jobDescription) =>
-    request("/job-analyzer/analyze", {
-      method: "POST",
-      body: JSON.stringify({ jobDescription }),
-    }),
-
-  /** Get user's job analysis history */
-  getHistory: () => request("/job-analyzer/history"),
-
-  /** Get specific job analysis by ID */
-  getById: (id) => request(`/job-analyzer/${id}`),
-};
-
-// Job Recommendation API
 export const jobApi = {
-  /** Analyze job description */
   analyze: (jobDescription) =>
     request("/job/analyze", {
       method: "POST",
       body: JSON.stringify({ jobDescription }),
     }),
-
-  /** Get job recommendations based on user profile */
-  getRecommendations: () => request("/job/recommendations"),
-
-  /** Get current job market data */
-  getMarketData: () => request("/job/market-data"),
+  getHistory: (page = 1, limit = 10) =>
+    request(`/job/history?page=${page}&limit=${limit}`),
+  getById: (id) => request(`/job/${id}`),
+  delete: (id) => request(`/job/${id}`, { method: "DELETE" }),
 };
 
-// Settings API
+// ─── Settings (Required by SettingsContext.jsx) ──────────────────────────────
 export const settingsApi = {
-  /** Get all user settings */
-  getSettings: () => request("/settings"),
-
-  /** Update user settings */
-  updateSettings: (settings) =>
-    request("/settings", {
-      method: "PUT",
-      body: JSON.stringify(settings),
+  get: () => request("/auth/settings"),
+  update: (patch) =>
+    request("/auth/settings", { method: "PATCH", body: JSON.stringify(patch) }),
+  changePassword: (payload) =>
+    request("/auth/change-password", {
+      method: "PATCH",
+      body: JSON.stringify(payload),
     }),
-
-  /** Update profile information */
-  updateProfile: (profile) =>
-    request("/settings/profile", {
-      method: "PUT",
-      body: JSON.stringify(profile),
+  updateProfile: (updates) =>
+    request("/auth/update-profile", {
+      method: "PATCH",
+      body: JSON.stringify(updates),
     }),
-
-  /** Change password */
-  changePassword: (passwordData) =>
-    request("/settings/password", {
-      method: "PUT",
-      body: JSON.stringify(passwordData),
-    }),
-
-  /** Logout from all devices */
-  logoutAllDevices: () =>
-    request("/settings/logout-all", {
-      method: "POST",
-    }),
-
-  /** Delete user account */
-  deleteAccount: (confirmation) =>
-    request("/settings/account", {
+  deleteAccount: (payload = {}) =>
+    request("/auth/account", {
       method: "DELETE",
-      body: JSON.stringify(confirmation),
-    }),
-
-  /** Reset settings to defaults */
-  resetSettings: () =>
-    request("/settings/reset", {
-      method: "POST",
+      body: JSON.stringify(payload),
     }),
 };
-
-// ─── Token helpers ────────────────────────────────────────────────────────────
 
 export const tokenStorage = {
   get: () => localStorage.getItem("cf_token"),

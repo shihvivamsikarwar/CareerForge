@@ -37,20 +37,26 @@ const jobAnalysisSchema = new mongoose.Schema(
       keywords: { type: Number, min: 0, max: 100, default: 0 },
     },
 
-    missingSkills: [{
-      type: String,
-      trim: true,
-    }],
+    missingSkills: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
 
-    matchedSkills: [{
-      type: String,
-      trim: true,
-    }],
+    matchedSkills: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
 
-    actionPlan: [{
-      type: String,
-      trim: true,
-    }],
+    actionPlan: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
 
     // Reference to the resume used for analysis
     resumeId: {

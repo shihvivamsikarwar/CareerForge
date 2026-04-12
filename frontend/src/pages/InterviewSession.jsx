@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import DashboardLayout from "../components/DashboardLayout";
 import { interviewApi } from "../services/api";
 import useAntiCheating from "../hooks/useAntiCheating";
+import { useSettings } from "../context/SettingsContext";
 
 const INTERVIEW_DURATION_SECONDS = 45 * 60;
 const WARNING_THRESHOLD = 3;
@@ -210,6 +211,13 @@ export default function InterviewSession() {
   const location = useLocation();
   const textareaRef = useRef(null);
   const interview = location.state?.interview;
+
+  // ── Read live settings from context ────────────────────────────────────
+  const { settings } = useSettings();
+  const INTERVIEW_DURATION_SECONDS =
+    (settings.interview.timerMinutes || 45) * 60;
+  const WARNING_THRESHOLD = settings.interview.warningThreshold || 3;
+  const INACTIVITY_TIMEOUT = settings.interview.inactivityTimeout || 120;
 
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState(() =>
@@ -640,27 +648,31 @@ export default function InterviewSession() {
               ))}
             </ul>
           </div>
-          <div className="bg-gradient-to-br from-brand-50 to-violet-50 border border-brand-100 rounded-2xl p-4">
-            <p className="text-xs font-bold text-brand-700 mb-2.5">
-              💡 Tips for better answers
-            </p>
-            <ul className="space-y-1.5">
-              {[
-                "Use STAR method: Situation, Task, Action, Result",
-                "Include specific examples from real projects",
-                'For technical Qs, explain the "why" not just "what"',
-                "Aim for 3–5 sentences per answer",
-              ].map((t) => (
-                <li
-                  key={t}
-                  className="text-xs text-slate-600 flex items-start gap-1.5"
-                >
-                  <span className="text-brand-400 mt-0.5 flex-shrink-0">•</span>{" "}
-                  {t}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {settings.interview.showTips && (
+            <div className="bg-gradient-to-br from-brand-50 to-violet-50 border border-brand-100 rounded-2xl p-4">
+              <p className="text-xs font-bold text-brand-700 mb-2.5">
+                💡 Tips for better answers
+              </p>
+              <ul className="space-y-1.5">
+                {[
+                  "Use STAR method: Situation, Task, Action, Result",
+                  "Include specific examples from real projects",
+                  'For technical Qs, explain the "why" not just "what"',
+                  "Aim for 3–5 sentences per answer",
+                ].map((t) => (
+                  <li
+                    key={t}
+                    className="text-xs text-slate-600 flex items-start gap-1.5"
+                  >
+                    <span className="text-brand-400 mt-0.5 flex-shrink-0">
+                      •
+                    </span>{" "}
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

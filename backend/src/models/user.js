@@ -1,6 +1,51 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
+// ── Settings sub-schema ────────────────────────────────────────────────────
+const settingsSchema = new mongoose.Schema(
+  {
+    // ── Interview behaviour ────────────────────────────────────────────────
+    interview: {
+      questionCount: { type: Number, min: 3, max: 15, default: 7 },
+      timerMinutes: { type: Number, min: 10, max: 120, default: 45 },
+      inactivityTimeout: { type: Number, min: 30, max: 300, default: 120 }, // seconds
+      warningThreshold: { type: Number, min: 1, max: 10, default: 3 },
+      enforceFullscreen: { type: Boolean, default: false },
+      showTips: { type: Boolean, default: true },
+    },
+
+    // ── Notification toggles ───────────────────────────────────────────────
+    notifications: {
+      integrityWarnings: { type: Boolean, default: true },
+      dataNudges: { type: Boolean, default: true }, // "add interviews" prompts
+      refreshReminders: { type: Boolean, default: true },
+    },
+
+    // ── Privacy ────────────────────────────────────────────────────────────
+    privacy: {
+      hideCheatingStatus: { type: Boolean, default: false }, // hides "Flagged" badges in history
+      publicProfile: { type: Boolean, default: false },
+    },
+
+    // ── Display ────────────────────────────────────────────────────────────
+    display: {
+      compactSidebar: { type: Boolean, default: false },
+      dateLocale: {
+        type: String,
+        default: "en-IN",
+        enum: ["en-IN", "en-US", "en-GB"],
+      },
+    },
+
+    // ── AI preferences ─────────────────────────────────────────────────────
+    ai: {
+      preferredModel: { type: String, default: "default" }, // 'default' | 'fast' | 'quality'
+      includeJobHistory: { type: Boolean, default: true },
+    },
+  },
+  { _id: false }
+);
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -22,9 +67,8 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      // Not required at schema level — Google OAuth users won't have one
       minlength: [6, "Password must be at least 6 characters"],
-      select: false, // Never returned in queries unless explicitly requested
+      select: false,
     },
 
     role: {
@@ -33,52 +77,43 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
 
-    // ── OAuth fields (populated when Google login is added) ──
     googleId: {
       type: String,
-      sparse: true, // Allows multiple null values (sparse unique index)
+      sparse: true,
       unique: true,
     },
 
-    avatar: {
-      type: String, // URL from Google profile photo
-    },
+    avatar: { type: String },
 
-    isEmailVerified: {
-      type: Boolean,
-      default: false,
-    },
+    isEmailVerified: { type: Boolean, default: false },
 
-    lastLogin: {
-      type: Date,
+    lastLogin: { type: Date },
+
+    // ── Embedded settings ──────────────────────────────────────────────────
+    settings: {
+      type: settingsSchema,
+      default: () => ({}),
     },
   },
-  {
-    timestamps: true, // Adds createdAt and updatedAt automatically
-  }
+  { timestamps: true }
 );
 
 // ── Indexes ────────────────────────────────────────────────────────────────
-// email is already indexed via `unique: true`
 userSchema.index({ googleId: 1 }, { sparse: true });
 
-// ── Pre-save hook: hash password before saving ─────────────────────────────
+// ── Pre-save: hash password ────────────────────────────────────────────────
 userSchema.pre("save", async function (next) {
-  // Only hash if password field was actually modified
   if (!this.isModified("password") || !this.password) return next();
-
-  const salt = await bcrypt.genSalt(12); // 12 rounds — good balance of speed vs security
+  const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
-// ── Instance method: compare a plain-text password against the hash ─────────
+// ── Instance methods ───────────────────────────────────────────────────────
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  // `this.password` may not be selected by default — caller must use .select('+password')
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// ── Instance method: return a safe public-facing object (no password) ───────
 userSchema.methods.toPublicJSON = function () {
   return {
     id: this._id,
@@ -88,6 +123,7 @@ userSchema.methods.toPublicJSON = function () {
     avatar: this.avatar || null,
     isEmailVerified: this.isEmailVerified,
     createdAt: this.createdAt,
+    settings: this.settings,
   };
 };
 

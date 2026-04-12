@@ -1,7 +1,11 @@
 const Resume = require("../models/Resume");
 const Interview = require("../models/Interview");
 const { analyzeJobDescription, recommendJobs } = require("../services/jobAI");
-const { analyzeJobWithMarket, recommendJobsEnhanced, getJobMarketData } = require("../services/jobAIEnhanced");
+const {
+  analyzeJobWithMarket,
+  recommendJobsEnhanced,
+  getJobMarketData,
+} = require("../services/jobAIEnhanced");
 
 // POST /api/job/analyze - Analyze job description against user profile
 const analyzeJob = async (req, res) => {
@@ -46,33 +50,37 @@ const analyzeJob = async (req, res) => {
       totalInterviews: interviews.length,
       hasCheating: false,
       weakAreas: [],
-      recentScores: []
+      recentScores: [],
     };
 
     if (interviews.length > 0) {
-      const scores = interviews.map(i => i.overallScore || 0);
-      performanceData.averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+      const scores = interviews.map((i) => i.overallScore || 0);
+      performanceData.averageScore =
+        scores.reduce((a, b) => a + b, 0) / scores.length;
       performanceData.recentScores = scores.slice(-5);
-      performanceData.hasCheating = interviews.some(i => i.hasCheating);
-      
+      performanceData.hasCheating = interviews.some((i) => i.hasCheating);
+
       // Identify weak areas from feedback
       const weakSkills = new Set();
-      interviews.forEach(interview => {
+      interviews.forEach((interview) => {
         if (interview.feedback) {
-          const feedback = typeof interview.feedback === 'string' 
-            ? interview.feedback 
-            : JSON.stringify(interview.feedback);
-          
+          const feedback =
+            typeof interview.feedback === "string"
+              ? interview.feedback
+              : JSON.stringify(interview.feedback);
+
           // Look for common weakness indicators
-          if (feedback.toLowerCase().includes('technical') || 
-              feedback.toLowerCase().includes('skills')) {
-            weakSkills.add('Technical Skills');
+          if (
+            feedback.toLowerCase().includes("technical") ||
+            feedback.toLowerCase().includes("skills")
+          ) {
+            weakSkills.add("Technical Skills");
           }
-          if (feedback.toLowerCase().includes('communication')) {
-            weakSkills.add('Communication');
+          if (feedback.toLowerCase().includes("communication")) {
+            weakSkills.add("Communication");
           }
-          if (feedback.toLowerCase().includes('confidence')) {
-            weakSkills.add('Confidence');
+          if (feedback.toLowerCase().includes("confidence")) {
+            weakSkills.add("Confidence");
           }
         }
       });
@@ -82,12 +90,12 @@ const analyzeJob = async (req, res) => {
     // Prepare data for AI
     const userData = {
       skills: resume.skills || [],
-      experience: resume.experience || '',
-      education: resume.education || '',
+      experience: resume.experience || "",
+      education: resume.education || "",
       score: resume.score || 0,
       strengths: resume.strengths || [],
       weaknesses: resume.weaknesses || [],
-      performance: performanceData
+      performance: performanceData,
     };
 
     // Analyze with Enhanced AI (includes market data)
@@ -96,15 +104,16 @@ const analyzeJob = async (req, res) => {
     // Adjust for cheating if detected
     if (performanceData.hasCheating) {
       analysis.readinessScore = Math.max(20, analysis.readinessScore - 20);
-      analysis.suggestions.push("Note: Some interview sessions had integrity concerns. Focus on genuine practice.");
+      analysis.suggestions.push(
+        "Note: Some interview sessions had integrity concerns. Focus on genuine practice."
+      );
     }
 
     res.status(200).json({
       success: true,
       analysis,
-      hasCheating: performanceData.hasCheating
+      hasCheating: performanceData.hasCheating,
     });
-
   } catch (error) {
     console.error("analyzeJob error:", error);
     res.status(500).json({
@@ -140,32 +149,36 @@ const getRecommendations = async (req, res) => {
       totalInterviews: interviews.length,
       hasCheating: false,
       weakAreas: [],
-      recentScores: []
+      recentScores: [],
     };
 
     if (interviews.length > 0) {
-      const scores = interviews.map(i => i.overallScore || 0);
-      performanceData.averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+      const scores = interviews.map((i) => i.overallScore || 0);
+      performanceData.averageScore =
+        scores.reduce((a, b) => a + b, 0) / scores.length;
       performanceData.recentScores = scores.slice(-5);
-      performanceData.hasCheating = interviews.some(i => i.hasCheating);
-      
+      performanceData.hasCheating = interviews.some((i) => i.hasCheating);
+
       // Identify weak areas from feedback
       const weakSkills = new Set();
-      interviews.forEach(interview => {
+      interviews.forEach((interview) => {
         if (interview.feedback) {
-          const feedback = typeof interview.feedback === 'string' 
-            ? interview.feedback 
-            : JSON.stringify(interview.feedback);
-          
-          if (feedback.toLowerCase().includes('technical') || 
-              feedback.toLowerCase().includes('skills')) {
-            weakSkills.add('Technical Skills');
+          const feedback =
+            typeof interview.feedback === "string"
+              ? interview.feedback
+              : JSON.stringify(interview.feedback);
+
+          if (
+            feedback.toLowerCase().includes("technical") ||
+            feedback.toLowerCase().includes("skills")
+          ) {
+            weakSkills.add("Technical Skills");
           }
-          if (feedback.toLowerCase().includes('communication')) {
-            weakSkills.add('Communication');
+          if (feedback.toLowerCase().includes("communication")) {
+            weakSkills.add("Communication");
           }
-          if (feedback.toLowerCase().includes('confidence')) {
-            weakSkills.add('Confidence');
+          if (feedback.toLowerCase().includes("confidence")) {
+            weakSkills.add("Confidence");
           }
         }
       });
@@ -175,12 +188,12 @@ const getRecommendations = async (req, res) => {
     // Prepare data for AI
     const userData = {
       skills: resume.skills || [],
-      experience: resume.experience || '',
-      education: resume.education || '',
+      experience: resume.experience || "",
+      education: resume.education || "",
       score: resume.score || 0,
       strengths: resume.strengths || [],
       weaknesses: resume.weaknesses || [],
-      performance: performanceData
+      performance: performanceData,
     };
 
     // Get enhanced recommendations from AI (includes market data)
@@ -189,15 +202,15 @@ const getRecommendations = async (req, res) => {
     // Adjust for cheating if detected
     if (performanceData.hasCheating) {
       recommendations.confidenceLevel = "Medium";
-      recommendations.reason += " Note: Some performance data may need verification.";
+      recommendations.reason +=
+        " Note: Some performance data may need verification.";
     }
 
     res.status(200).json({
       success: true,
       recommendations,
-      hasCheating: performanceData.hasCheating
+      hasCheating: performanceData.hasCheating,
     });
-
   } catch (error) {
     console.error("getRecommendations error:", error);
     res.status(500).json({
@@ -211,7 +224,7 @@ const getRecommendations = async (req, res) => {
 const getMarketData = async (req, res) => {
   try {
     const marketData = await getJobMarketData();
-    
+
     res.status(200).json({
       success: true,
       marketData,
@@ -228,5 +241,5 @@ const getMarketData = async (req, res) => {
 module.exports = {
   analyzeJob,
   getRecommendations,
-  getMarketData
+  getMarketData,
 };

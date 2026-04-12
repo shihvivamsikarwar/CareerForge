@@ -1,9 +1,9 @@
 const express = require("express");
 const { protect } = require("../middleware/authMiddleware");
-const { 
-  analyzeJobDescription, 
-  getJobAnalysisHistory, 
-  getJobAnalysisById 
+const {
+  analyzeJobDescription,
+  getJobAnalysisHistory,
+  getJobAnalysisById,
 } = require("../controllers/jobAnalyzerController");
 
 const router = express.Router();

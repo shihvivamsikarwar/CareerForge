@@ -8,6 +8,10 @@ const {
   loginUser,
   getMe,
   updateProfile,
+  getSettings,
+  updateSettings,
+  changePassword,
+  deleteAccount,
 } = require("../controllers/authController");
 
 const router = express.Router();
@@ -66,6 +70,18 @@ router.get("/me", protect, getMe);
 
 // PATCH /api/auth/update-profile
 router.patch("/update-profile", protect, updateProfile);
+
+// GET  /api/auth/settings
+router.get("/settings", protect, getSettings);
+
+// PATCH /api/auth/settings
+router.patch("/settings", protect, updateSettings);
+
+// PATCH /api/auth/change-password
+router.patch("/change-password", protect, changePassword);
+
+// DELETE /api/auth/account
+router.delete("/account", protect, deleteAccount);
 
 // ── Google OAuth routes ───────────────────────────────────────────────────
 
