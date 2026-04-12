@@ -1,6 +1,7 @@
 "use strict";
 
 const fetch = require("node-fetch");
+const { analyzePerformanceEnhanced } = require("./aiServiceEnhanced");
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -28,94 +29,8 @@ const trustFromCheating = (flagged, total) => {
 };
 
 const analyzePerformance = async (digest) => {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || "mistralai/mistral-7b-instruct";
-
-  if (!apiKey) {
-    console.warn(
-      "⚠️  OPENROUTER_API_KEY not set — returning mock performance analysis"
-    );
-    return getMock(digest);
-  }
-
-  const system = `You are a senior career coach and talent analyst.
-Analyse the candidate's interview performance data and return ONLY a valid JSON object — no markdown, no preamble.
-
-Required schema:
-{
-  "overallLevel": "Beginner | Intermediate | Advanced | Expert",
-  "strongSkills": ["skill derived from strengths data"],
-  "weakSkills":   ["specific gap derived from weaknesses"],
-  "improvementPlan": ["concrete actionable step"],
-  "careerSuggestions": ["specific job role or career path"],
-  "trustScore": 0-100,
-  "summary": "3-4 sentence overall career-readiness assessment"
-}
-
-Rules:
-- overallLevel: 0-4=Beginner, 5-6=Intermediate, 7-8=Advanced, 9-10=Expert
-- strongSkills: 3-6 evidence-backed skills
-- weakSkills: 2-5 specific gaps
-- improvementPlan: 4-6 prioritised actionable steps (not generic)
-- careerSuggestions: 3-5 specific roles (e.g. "Frontend Engineer at a product startup")
-- trustScore: start 100, subtract 15 per cheating incident, minimum 10
-- summary: honest, constructive, motivating`;
-
-  const user = `Performance digest:
-- Total sessions: ${digest.totalInterviews}
-- Average score: ${digest.averageScore}/10
-- Best: ${digest.bestScore}/10  Worst: ${digest.worstScore}/10
-- Score trend (oldest→newest): [${digest.scoreTrend.join(", ")}]
-- Interview types: ${digest.interviewTypes.join(", ")}
-- Suspected cheating sessions: ${digest.suspectedCheatingCount}
-
-Top recurring strengths:
-${digest.allStrengths
-  .slice(0, 15)
-  .map((s, i) => `${i + 1}. ${s}`)
-  .join("\n")}
-
-Top recurring weaknesses:
-${digest.allWeaknesses
-  .slice(0, 15)
-  .map((w, i) => `${i + 1}. ${w}`)
-  .join("\n")}`;
-
-  try {
-    const response = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://careerforge.app",
-        "X-Title": "CareerForge Performance Analyser",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: user },
-        ],
-        temperature: 0.3,
-        max_tokens: 1800,
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (!response.ok)
-      throw new Error(
-        `OpenRouter ${response.status}: ${await response.text()}`
-      );
-
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content;
-    if (!content) throw new Error("Empty response");
-
-    return parse(content, digest);
-  } catch (err) {
-    console.error("analyzePerformance error:", err.message);
-    return getFallback(digest);
-  }
+  // Use the enhanced AI service with better error handling and retries
+  return await analyzePerformanceEnhanced(digest);
 };
 
 const parse = (content, digest) => {

@@ -15,6 +15,7 @@ const interviewRoutes = require("./routes/interviewRoutes");
 const performanceRoutes = require("./routes/performanceRoutes");
 const jobAnalyzerRoutes = require("./routes/jobAnalyzerRoutes");
 const careerRoutes = require("./routes/careerRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -141,8 +142,9 @@ app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/resume", resumeRoutes);
 app.use("/api/interview", interviewRoutes);
 app.use("/api/performance", performanceRoutes);
-app.use("/api/job", jobAnalyzerRoutes);
+app.use("/api/job-analyzer", jobAnalyzerRoutes);
 app.use("/api/career", careerRoutes);
+app.use("/api/ai", aiRoutes);
 
 // ─────────────────────────────────────────────────────────────────────────
 // 9. Error handling (must be after all routes)
@@ -156,7 +158,7 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log(`\n🚀 CareerForge API running on port ${PORT}`);
+  console.log(`\nCareerForge API running on port ${PORT}`);
   console.log(`   Environment : ${process.env.NODE_ENV}`);
   console.log(
     `   Google OAuth: ${

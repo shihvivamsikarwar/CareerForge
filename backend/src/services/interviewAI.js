@@ -1,4 +1,5 @@
 const fetch = require("node-fetch");
+const { evaluateInterviewEnhanced } = require("./aiServiceEnhanced");
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
@@ -24,88 +25,8 @@ const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
  * @param {string}   type       - Interview type (e.g. 'react', 'hr')
  */
 const evaluateInterview = async (questions, answers, type = "technical") => {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || "mistralai/mistral-7b-instruct";
-
-  if (!apiKey) {
-    console.warn("⚠️  OPENROUTER_API_KEY not set — returning mock evaluation");
-    return getMockEvaluation(questions, answers);
-  }
-
-  // Build a compact transcript
-  const transcript = questions
-    .map(
-      (q, i) =>
-        `Q${i + 1}: ${q}\nA${i + 1}: ${
-          (answers[i] || "").trim() || "[No answer provided]"
-        }`
-    )
-    .join("\n\n");
-
-  const systemPrompt = `You are a senior ${type} interviewer with 15+ years of experience evaluating candidates.
-Analyse the following interview transcript and return ONLY a valid JSON object.
-No markdown, no explanation, no preamble — just raw JSON.
-
-Required schema:
-{
-  "score": <integer 0-10>,
-  "strengths": ["<specific strength observed in answers>"],
-  "weaknesses": ["<specific gap or incorrect answer>"],
-  "suggestions": ["<actionable improvement the candidate should make>"],
-  "overallFeedback": "<2-3 sentence overall assessment>",
-  "perQuestion": [
-    { "questionScore": <0-10>, "questionFeedback": "<one sentence on this answer>" }
-  ]
-}
-
-Rules:
-- score: overall holistic score for the entire interview (0=terrible, 10=perfect)
-- strengths: 2-4 specific positives from the actual answers given
-- weaknesses: 2-3 honest gaps — if an answer was wrong or shallow, say so specifically
-- suggestions: 3-4 actionable, specific study recommendations
-- overallFeedback: constructive, honest, professional tone
-- perQuestion: one entry per Q&A pair, same order as input
-- If an answer is blank or very short, flag it clearly as insufficient
-- Return ONLY the JSON object.`;
-
-  const userPrompt = `Interview type: ${type}\nTranscript:\n\n${transcript}`;
-
-  try {
-    const response = await fetch(OPENROUTER_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://careerforge.app",
-        "X-Title": "CareerForge Interview Evaluator",
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.3,
-        max_tokens: 2000,
-        response_format: { type: "json_object" },
-      }),
-    });
-
-    if (!response.ok) {
-      const errBody = await response.text();
-      throw new Error(`OpenRouter API error ${response.status}: ${errBody}`);
-    }
-
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content;
-
-    if (!content) throw new Error("Empty response from OpenRouter");
-
-    return parseEvaluationResponse(content, questions.length);
-  } catch (error) {
-    console.error("evaluateInterview AI error:", error.message);
-    return getFallbackEvaluation(questions, answers);
-  }
+  // Use the enhanced AI service with better error handling and retries
+  return await evaluateInterviewEnhanced(questions, answers, type);
 };
 
 // ─────────────────────────────────────────────────────────────────────────
