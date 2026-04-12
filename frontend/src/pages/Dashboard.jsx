@@ -1,8 +1,10 @@
 import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import DashboardLayout from "../components/DashboardLayout";
+import { resumeApi, interviewApi, performanceApi } from "../services/api";
 
-const stats = [
+const getInitialStats = () => [
   {
     label: "Resume Score",
     value: "—",
@@ -48,7 +50,7 @@ const colorMap = {
   amber: { bg: "bg-amber-50", text: "text-amber-700", icon: "bg-amber-100" },
 };
 
-const recentActivity = [
+const getInitialRecentActivity = () => [
   {
     icon: "🚀",
     text: "Account created — welcome to CareerForge!",
@@ -72,11 +74,169 @@ const recentActivity = [
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [stats, setStats] = useState(getInitialStats());
+  const [recentActivity, setRecentActivity] = useState(
+    getInitialRecentActivity()
+  );
+  const [skillProgress, setSkillProgress] = useState([
+    { name: "Data Structures & Algorithms", value: 0 },
+    { name: "System Design", value: 0 },
+    { name: "Behavioural / HR Rounds", value: 0 },
+    { name: "Domain Skills", value: 0 },
+  ]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch all data in parallel
+      const [resumeData, interviewHistory, performanceData] = await Promise.all(
+        [
+          resumeApi.getLatest().catch(() => null),
+          interviewApi.getHistory(1, 50).catch(() => null),
+          performanceApi.getSummary().catch(() => null),
+        ]
+      );
+
+      // Update stats with real data
+      const newStats = getInitialStats();
+
+      // Resume Score
+      if (resumeData?.resume?.score) {
+        newStats[0].value = resumeData.resume.score.toString();
+        newStats[0].delta = resumeData.resume.score >= 70 ? "Good" : "Improve";
+      }
+
+      // Interviews Done
+      const completedInterviews =
+        interviewHistory?.interviews?.filter((i) => i.status === "evaluated")
+          .length || 0;
+      newStats[1].value = completedInterviews.toString();
+      newStats[1].delta = completedInterviews > 0 ? "View" : "Start";
+
+      // Interview Readiness
+      if (performanceData?.hasData && performanceData.summary) {
+        const avgScore = performanceData.summary.averageScore || 0;
+        newStats[2].value = Math.round(avgScore).toString();
+        newStats[2].delta =
+          avgScore >= 70 ? "Ready" : avgScore >= 50 ? "Practice" : "Need Work";
+      }
+
+      // Job Match Average (placeholder - would need job matching API)
+      newStats[3].value = "—";
+      newStats[3].delta = "Coming Soon";
+
+      setStats(newStats);
+
+      // Update recent activity with real data
+      const activities = getInitialRecentActivity();
+      const realActivities = [];
+
+      // Add resume upload activity
+      if (resumeData?.resume) {
+        realActivities.push({
+          icon: "📄",
+          text: `Resume analyzed with score ${resumeData.resume.score}`,
+          score: resumeData.resume.score >= 70 ? "Good" : "Review",
+          time: getRelativeTime(resumeData.resume.analyzedAt),
+        });
+      }
+
+      // Add recent interview activities
+      if (interviewHistory?.interviews) {
+        interviewHistory.interviews.slice(0, 3).forEach((interview) => {
+          if (interview.status === "evaluated") {
+            realActivities.push({
+              icon: "🎤",
+              text: `Completed ${interview.type} interview`,
+              score: interview.score
+                ? Math.round(interview.score).toString()
+                : "Done",
+              time: getRelativeTime(
+                interview.evaluatedAt || interview.createdAt
+              ),
+            });
+          }
+        });
+      }
+
+      // Combine default activities with real ones, prioritize real ones
+      const combinedActivities = [
+        ...realActivities,
+        ...activities.slice(0, 3 - realActivities.length),
+      ];
+      setRecentActivity(combinedActivities);
+
+      // Update skill progress with performance data
+      if (performanceData?.hasData && performanceData.summary?.typeBreakdown) {
+        const skills = [
+          { name: "Data Structures & Algorithms", value: 0 },
+          { name: "System Design", value: 0 },
+          { name: "Behavioural / HR Rounds", value: 0 },
+          { name: "Domain Skills", value: 0 },
+        ];
+
+        performanceData.summary.typeBreakdown.forEach((type) => {
+          if (type.type === "technical") {
+            skills[0].value = Math.round(type.averageScore || 0);
+            skills[1].value = Math.round(type.averageScore || 0);
+          } else if (type.type === "behavioral") {
+            skills[2].value = Math.round(type.averageScore || 0);
+          } else if (type.type === "domain") {
+            skills[3].value = Math.round(type.averageScore || 0);
+          }
+        });
+
+        setSkillProgress(skills);
+      }
+    } catch (err) {
+      console.error("Error fetching dashboard data:", err);
+      setError("Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getRelativeTime = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    if (diffHours > 0)
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+    return "Just now";
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout
+        pageTitle={`Welcome back, ${user?.name?.split(" ")[0] || "there"} 👋`}
+        pageSubtitle="Loading your career snapshot..."
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout
       pageTitle={`Welcome back, ${user?.name?.split(" ")[0] || "there"} 👋`}
-      pageSubtitle="Here's your career snapshot"
+      pageSubtitle={
+        error ? "Error loading data" : "Here's your career snapshot"
+      }
     >
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -175,7 +335,8 @@ export default function Dashboard() {
               {
                 icon: "🚀",
                 label: "Career Guidance",
-                color: "bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-700 hover:to-indigo-700",
+                color:
+                  "bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-700 hover:to-indigo-700",
                 href: "/career",
               },
             ].map((action) => (
@@ -202,29 +363,39 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Skill progress placeholder */}
+      {/* Skill progress */}
       <div className="mt-6 bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
         <h2 className="font-display font-semibold text-slate-800 mb-2">
           Skill Progress
         </h2>
         <p className="text-sm text-slate-400 mb-5">
-          Complete your first resume analysis to see your skill breakdown.
+          {skillProgress.some((s) => s.value > 0)
+            ? "Your performance across different skill areas"
+            : "Complete your first interview to see your skill breakdown."}
         </p>
         <div className="grid sm:grid-cols-2 gap-5">
-          {[
-            "Data Structures & Algorithms",
-            "System Design",
-            "Behavioural / HR Rounds",
-            "Domain Skills",
-          ].map((skill) => (
-            <div key={skill}>
+          {skillProgress.map((skill) => (
+            <div key={skill.name}>
               <div className="flex justify-between items-center mb-1.5">
                 <span className="text-sm font-medium text-slate-500">
-                  {skill}
+                  {skill.name}
                 </span>
-                <span className="text-sm font-bold text-slate-400">—</span>
+                <span
+                  className={`text-sm font-bold ${
+                    skill.value > 0 ? "text-slate-700" : "text-slate-400"
+                  }`}
+                >
+                  {skill.value > 0 ? `${skill.value}%` : "No data"}
+                </span>
               </div>
-              <div className="h-2 bg-slate-100 rounded-full" />
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                {skill.value > 0 && (
+                  <div
+                    className="h-full bg-gradient-to-r from-brand-500 to-violet-500 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(skill.value, 100)}%` }}
+                  />
+                )}
+              </div>
             </div>
           ))}
         </div>
